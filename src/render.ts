@@ -677,8 +677,7 @@ function renderTable(node: Table, ctx: RenderContext): string[] {
   const aligns = node.align || [];
   const pad = ctx.options.tablePadding;
   const padStr = " ".repeat(Math.max(0, pad));
-  const minContent = Math.max(1, ctx.options.tableEllipsis.length + 1);
-  // ensure we always have room for at least one visible char + ellipsis + padding
+  const minContent = Math.max(1, visibleWidth(ctx.options.tableEllipsis));
   const minColWidth = Math.max(1, pad * 2 + minContent);
 
   cells.forEach((row: string[]) => {
@@ -689,7 +688,7 @@ function renderTable(node: Table, ctx: RenderContext): string[] {
     });
   });
 
-  const totalWidth = widths.reduce((a, b) => a + b, 0) + 3 * colCount + 1;
+  const totalWidth = widths.reduce((a, b) => a + b, 0) + colCount + 1;
   if (ctx.options.wrap && ctx.options.width && totalWidth > ctx.options.width) {
     // Shrink widest columns until the table fits; allow overflow if already at minima
     let over = totalWidth - ctx.options.width;

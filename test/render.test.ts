@@ -4,7 +4,7 @@ import { handleStdoutEpipe, parseArgs } from "../src/cli.ts";
 import { hyperlinkSupported } from "../src/hyperlink.ts";
 import { render, strip } from "../src/index.ts";
 import { createStyler, themes } from "../src/theme.ts";
-import { wrapText } from "../src/wrap.ts";
+import { visibleWidth, wrapText, wrapWithPrefix } from "../src/wrap.ts";
 
 const noColor = { color: false, hyperlinks: false, wrap: true, width: 40 };
 
@@ -106,10 +106,44 @@ describe("wrapping", () => {
     expect(out.split("\n")[0].length).toBeGreaterThan(20);
   });
 
-  it("allows long url to overflow without breaking word", () => {
-    const url = "https://example.com/averylongpathwithoutspaces";
-    const out = strip(url, { ...noColor, width: 10, wrap: true });
-    expect(out).toContain(url);
+  it("folds long urls and identifiers to the visible width", () => {
+    const values = [
+      "https://example.com/averylongpathwithoutspaces",
+      "resolveRonaReasonIdWithConfigurationFallback",
+    ];
+    for (const value of values) {
+      const lines = wrapText(value, 10, true);
+      expect(lines.join("")).toBe(value);
+      expect(lines.every((line) => visibleWidth(line) <= 10)).toBe(true);
+    }
+  });
+
+  it("folds CJK and emoji without losing grapheme clusters", () => {
+    const values = ["这是一个完全没有空格的超长中文段落用于验证终端换行行为", "👨‍👩‍👧‍👦🚀🎉✅👩🏽‍💻🌏🧪📦🔧"];
+    for (const value of values) {
+      const lines = wrapText(value, 10, true);
+      expect(lines.join("")).toBe(value);
+      expect(lines.every((line) => visibleWidth(line) <= 10)).toBe(true);
+    }
+  });
+
+  it("preserves ANSI styling while folding long tokens", () => {
+    const styled = createStyler({ color: true })("resolveRonaReasonIdWithConfigurationFallback", {
+      color: "cyan",
+      bold: true,
+    });
+    const lines = wrapText(styled, 10, true);
+    expect(lines.every((line) => visibleWidth(line) <= 10)).toBe(true);
+    expect(strip(lines.join(""), { ...noColor, wrap: false }).trim()).toContain(
+      "resolveRonaReasonIdWithConfigurationFallback",
+    );
+    expect(lines.every((line) => line.includes("\u001b["))).toBe(true);
+  });
+
+  it("accounts for prefixes when folding long tokens", () => {
+    const lines = wrapWithPrefix("这是一个没有空格的中文引用内容", 12, true, "│ ");
+    expect(lines.every((line) => visibleWidth(line) <= 12)).toBe(true);
+    expect(lines.every((line) => line.startsWith("│ "))).toBe(true);
   });
 
   it("wrapText returns empty line when input is empty", () => {

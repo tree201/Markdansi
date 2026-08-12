@@ -119,7 +119,7 @@ describe("tables", () => {
 `;
     const out = strip(md, {
       ...noColor,
-      width: 15,
+      width: 12,
       wrap: true,
       tableTruncate: false,
     });
@@ -165,7 +165,7 @@ describe("tables", () => {
     expect(out).not.toContain("Provi…");
   });
 
-  it("allows long words in cells to overflow (no hard break)", () => {
+  it("hard-wraps long words in cells without losing content", () => {
     const word = "Supercalifragilistic";
     const md = `
 | h1 | h2 |
@@ -178,7 +178,14 @@ describe("tables", () => {
       wrap: true,
       tableTruncate: false,
     });
-    expect(out).toContain(word);
+    const bodyLines = out.split("\n").filter((line) => line.includes("│"));
+    const bodyStart = bodyLines.findIndex((line) => line.includes("x"));
+    const content = bodyLines
+      .slice(bodyStart)
+      .map((line) => stripAnsiCodes(line).split("│")[1]?.trim() ?? "")
+      .join("");
+    expect(content).toBe(word);
+    expectLinesWithinWidth(out, 10);
   });
 
   it("respects table alignment markers from GFM", () => {

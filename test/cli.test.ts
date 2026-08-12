@@ -122,7 +122,7 @@ describe("cli input args", () => {
       { encoding: "utf8", input },
     );
 
-    expect(output).toContain("+----+----+");
+    expect(output).toContain("+---+---+");
     expect(output).not.toContain("┌");
     expect(output).toContain("const x = 1;");
   });
