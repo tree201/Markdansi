@@ -35,6 +35,7 @@ type ResolvedOptions = {
   tableDense: boolean;
   tableTruncate: boolean;
   tableEllipsis: string;
+  inlineCodeMarkers: boolean;
   codeBox: boolean;
   codeGutter: boolean;
   codeWrap: boolean;
@@ -85,6 +86,7 @@ function resolveOptions(userOptions: RenderOptions = {}): ResolvedOptions {
   const tableDense = userOptions.tableDense ?? false;
   const tableTruncate = userOptions.tableTruncate ?? true;
   const tableEllipsis = userOptions.tableEllipsis ?? "…";
+  const inlineCodeMarkers = userOptions.inlineCodeMarkers ?? false;
   const codeBox = userOptions.codeBox ?? true;
   const codeGutter = userOptions.codeGutter ?? false;
   const codeWrap = userOptions.codeWrap ?? true;
@@ -101,6 +103,7 @@ function resolveOptions(userOptions: RenderOptions = {}): ResolvedOptions {
     tableDense,
     tableTruncate,
     tableEllipsis,
+    inlineCodeMarkers,
     codeBox,
     codeGutter,
     codeWrap,
@@ -582,8 +585,8 @@ function renderInline(children: Paragraph["children"], ctx: RenderContext): stri
         break;
       case "inlineCode": {
         const codeTheme = ctx.options.theme.inlineCode || ctx.options.theme.blockCode;
-        const content = ctx.style(node.value, codeTheme);
-        out += content;
+        const value = ctx.options.inlineCodeMarkers ? `\`${node.value}\`` : node.value;
+        out += ctx.style(value, codeTheme);
         break;
       }
       case "link":

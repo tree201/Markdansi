@@ -14,6 +14,13 @@ describe("inline formatting", () => {
     expect(out).toContain("Hello em strong code gone");
   });
 
+  it("optionally preserves inline code markers", () => {
+    expect(strip("Use `src/main.ts`", noColor)).toContain("Use src/main.ts");
+    expect(strip("Use `src/main.ts`", { ...noColor, inlineCodeMarkers: true })).toContain(
+      "Use `src/main.ts`",
+    );
+  });
+
   it("decodes named and numeric character references", () => {
     expect(strip("A &amp; B &#38; C &#x26; D", noColor).trim()).toBe("A & B & C & D");
     expect(strip("&#128; &#xD800; &#x110000;", noColor).trim()).toBe("� � �");

@@ -73,6 +73,8 @@ export interface RenderOptions {
   tableTruncate?: boolean;
   /** Ellipsis text for truncation (default "…"). */
   tableEllipsis?: string;
+  /** Keep Markdown backticks around inline code (default false). */
+  inlineCodeMarkers?: boolean;
   /** Draw a box around fenced code blocks (default true). */
   codeBox?: boolean;
   /** Show line-number gutter for code blocks (default false). */
