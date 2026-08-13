@@ -699,6 +699,7 @@ function renderTable(node: Table, ctx: RenderContext): string[] {
   );
   const colCount = Math.max(...cells.map((r) => r.length));
   const widths: number[] = Array.from({ length: colCount }, () => 1);
+  const desiredWidths: number[] = Array.from({ length: colCount }, () => 1);
   const aligns = node.align || [];
   const pad = ctx.options.tablePadding;
   const padStr = " ".repeat(Math.max(0, pad));
@@ -706,7 +707,9 @@ function renderTable(node: Table, ctx: RenderContext): string[] {
   cells.forEach((row: string[]) => {
     row.forEach((cell: string, idx: number) => {
       const padded = `${padStr}${cell}${padStr}`;
-      widths[idx] = Math.max(widths[idx] ?? 1, Math.min(MAX_COL, visibleWidth(padded)));
+      const cellWidth = visibleWidth(padded);
+      desiredWidths[idx] = Math.max(desiredWidths[idx] ?? 1, cellWidth);
+      widths[idx] = Math.max(widths[idx] ?? 1, Math.min(MAX_COL, cellWidth));
     });
   });
 
@@ -725,6 +728,17 @@ function renderTable(node: Table, ctx: RenderContext): string[] {
       return [ctx.style(`${label}:`, ctx.options.theme.tableHeader), ...wrapped.map((line) => `  ${ctx.style(line, ctx.options.theme.tableCell)}`)];
     }).concat(rowIndex < rows.length - 1 ? [ctx.style("─".repeat(viewport), ctx.options.theme.hr)] : []));
     return [`${lines.join("\n")}\n\n`];
+  }
+  if (ctx.options.wrap && ctx.options.width && naturalWidth < ctx.options.width) {
+    let remaining = ctx.options.width - naturalWidth;
+    while (remaining > 0) {
+      const column = widths
+        .map((width, index) => ({ index, growth: (desiredWidths[index] ?? width) - width }))
+        .sort((left, right) => right.growth - left.growth)[0];
+      if (!column || column.growth <= 0) break;
+      widths[column.index] = (widths[column.index] ?? 1) + 1;
+      remaining -= 1;
+    }
   }
   const minContent = Math.max(1, visibleWidth(ctx.options.tableEllipsis));
   const minColWidth = Math.max(1, pad * 2 + minContent);

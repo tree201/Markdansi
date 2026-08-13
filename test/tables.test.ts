@@ -182,6 +182,15 @@ describe("tables", () => {
     expect(out).not.toContain("Provi…");
   });
 
+  it("uses available grid width before truncating a capped column", () => {
+    const detail = "abcdefghijklmnopqrstuvwxyz1234567890ABCDEFGHIJKLMN";
+    const md = `| 页面 | 最小能力 |\n| --- | --- |\n| 总览 | ${detail} |`;
+    const out = strip(md, { ...noColor, width: 96, tableLayout: "auto", wrap: true });
+    expect(out).toContain(detail);
+    expect(out).not.toContain("…");
+    expectLinesWithinWidth(out, 96);
+  });
+
   it("hard-wraps long words in cells without losing content", () => {
     const word = "Supercalifragilistic";
     const md = `
