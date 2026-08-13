@@ -51,7 +51,6 @@
     "typecheck": "tsc -p tsconfig.json --noEmit",
     "types": "tsc -p tsconfig.json --emitDeclarationOnly",
     "compile": "tsc -p tsconfig.json",
-    "prepare": "tsc -p tsconfig.json",
     "markdansi": "tsx src/cli.ts"
   },
   "dependencies": {
