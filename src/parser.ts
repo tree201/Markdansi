@@ -89,6 +89,9 @@ function convertInlineTokens(tokens: Token[] | undefined): InlineNode[] {
         });
         break;
       }
+      case "image":
+        nodes.push({ type: "image", alt: (token as Tokens.Image).text });
+        break;
       case "br":
         nodes.push({ type: "break" });
         break;

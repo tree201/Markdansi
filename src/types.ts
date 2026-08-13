@@ -57,6 +57,10 @@ export interface RenderOptions {
   theme?: ThemeName | Theme;
   /** Controls visual spacing between Markdown blocks (default "normal"). */
   blockSpacing?: "normal" | "compact";
+  /** Marker used for unordered list items (default "-"). */
+  unorderedListMarker?: string;
+  /** Chooses grid, vertical, or automatic table layout (default "grid"). */
+  tableLayout?: "grid" | "vertical" | "auto";
   /** Limits rendered code rows when a caller is displaying incomplete streamed Markdown. */
   maxCodeRows?: number;
   /**

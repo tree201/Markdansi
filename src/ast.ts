@@ -46,7 +46,12 @@ export type Html = Node & {
   value: string;
 };
 
-export type InlineNode = Text | Emphasis | Strong | Delete | InlineCode | Link | Break | Html;
+export type Image = Node & {
+  type: "image";
+  alt: string;
+};
+
+export type InlineNode = Text | Emphasis | Strong | Delete | InlineCode | Link | Break | Html | Image;
 
 export type Paragraph = Node & {
   type: "paragraph";

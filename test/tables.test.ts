@@ -111,6 +111,16 @@ describe("tables", () => {
     expect(out).toMatch(/h2/);
   });
 
+  it("uses plain inline code and preserves narrow tables with automatic vertical layout", () => {
+    const md = "| 名称 | 说明 |\n| --- | --- |\n| hello-world.cpp | `新增文件不会影响原有 JavaScript 项目的构建流程` |";
+    const out = strip(md, { ...noColor, width: 28, inlineCodeMarkers: true, tableLayout: "auto" });
+    expect(out).toContain("名称:");
+    expect(out).toContain("说明:");
+    expect(out).toContain("hello-world.cpp");
+    expect(out.replace(/\s+/g, "")).toContain("新增文件不会影响原有JavaScript项目的构建流程");
+    expect(out).not.toContain("`");
+  });
+
   it("wraps table cells on spaces when width is small", () => {
     const md = `
 | h1 | h2 |

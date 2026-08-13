@@ -97,6 +97,12 @@ describe("inline formatting", () => {
     const out = strip("---\n\n---\n\n---", { ...noColor, width: 20 });
     expect(out.split("\n").filter((line) => line.includes("—")).length).toBe(1);
   });
+
+  it("renders image placeholders and configured unordered list markers", () => {
+    const out = strip("- item\n\n![Layout](./layout.png)", { ...noColor, blockSpacing: "compact", unorderedListMarker: "•" });
+    expect(out).toContain("• item");
+    expect(out).toContain("[Image: Layout]");
+  });
 });
 
 describe("wrapping", () => {

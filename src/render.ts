@@ -40,6 +40,8 @@ type ResolvedOptions = {
   codeGutter: boolean;
   codeWrap: boolean;
   blockSpacing: "normal" | "compact";
+  unorderedListMarker: string;
+  tableLayout: "grid" | "vertical" | "auto";
   maxCodeRows?: number | undefined;
 };
 
@@ -93,6 +95,8 @@ function resolveOptions(userOptions: RenderOptions = {}): ResolvedOptions {
   const codeGutter = userOptions.codeGutter ?? false;
   const codeWrap = userOptions.codeWrap ?? true;
   const blockSpacing = userOptions.blockSpacing ?? "normal";
+  const unorderedListMarker = userOptions.unorderedListMarker ?? "-";
+  const tableLayout = userOptions.tableLayout ?? "grid";
   const maxCodeRows = userOptions.maxCodeRows;
   const resolved: ResolvedOptions = {
     wrap,
@@ -112,6 +116,8 @@ function resolveOptions(userOptions: RenderOptions = {}): ResolvedOptions {
     codeGutter,
     codeWrap,
     blockSpacing,
+    unorderedListMarker,
+    tableLayout,
     ...(maxCodeRows !== undefined ? { maxCodeRows } : {}),
   };
   if (baseWidth !== undefined) resolved.width = baseWidth;
@@ -472,7 +478,7 @@ function renderListItem(
   start = 1,
   idx = 0,
 ): string[] {
-  const marker = ordered ? `${start + idx}.` : "-";
+  const marker = ordered ? `${start + idx}.` : ctx.options.unorderedListMarker;
   const markerStyled = ctx.style(marker, ctx.options.theme.listMarker);
   const content = renderChildren(node.children, ctx, indentLevel + 1, tight)
     .join("")
@@ -610,6 +616,9 @@ function renderInline(children: Paragraph["children"], ctx: RenderContext): stri
       case "html":
         out += node.value;
         break;
+      case "image":
+        out += ctx.style(`[Image: ${node.alt}]`, ctx.options.theme.link);
+        break;
     }
   }
   return out;
@@ -684,13 +693,26 @@ function renderTable(node: Table, ctx: RenderContext): string[] {
   const header = node.children[0];
   if (!header) return [];
   const rows = node.children.slice(1);
+  const tableContext: RenderContext = { ...ctx, options: { ...ctx.options, inlineCodeMarkers: false } };
   const cells = [header, ...rows].map((row) =>
-    row.children.map((cell) => renderInline(cell.children, ctx)),
+    row.children.map((cell) => renderInline(cell.children, tableContext)),
   );
   const colCount = Math.max(...cells.map((r) => r.length));
   const widths: number[] = Array.from({ length: colCount }, () => 1);
   const aligns = node.align || [];
   const pad = ctx.options.tablePadding;
+  const tableIsNarrow = ctx.options.wrap && Boolean(ctx.options.width) && (ctx.options.width ?? 0) < colCount * 16;
+  if (ctx.options.tableLayout === "vertical" || (ctx.options.tableLayout === "auto" && tableIsNarrow)) {
+    const viewport = ctx.options.width ?? 80;
+    const headers = cells[0] ?? [];
+    const lines = rows.flatMap((row, rowIndex) => row.children.flatMap((cell, column) => {
+      const label = headers[column] ?? "";
+      const value = renderInline(cell.children, tableContext);
+      const wrapped = wrapText(value, Math.max(1, viewport - 2), ctx.options.wrap);
+      return [ctx.style(`${label}:`, ctx.options.theme.tableHeader), ...wrapped.map((line) => `  ${ctx.style(line, ctx.options.theme.tableCell)}`)];
+    }).concat(rowIndex < rows.length - 1 ? [ctx.style("─".repeat(viewport), ctx.options.theme.hr)] : []));
+    return [`${lines.join("\n")}\n\n`];
+  }
   const padStr = " ".repeat(Math.max(0, pad));
   const minContent = Math.max(1, visibleWidth(ctx.options.tableEllipsis));
   const minColWidth = Math.max(1, pad * 2 + minContent);
