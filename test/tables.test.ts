@@ -121,6 +121,13 @@ describe("tables", () => {
     expect(out).not.toContain("`");
   });
 
+  it("keeps aligned short tables in grid layout when the viewport fits", () => {
+    const md = "| 左 | 中 | 右 |\n| :--- | :---: | ---: |\n| a | b | c |";
+    const out = strip(md, { ...noColor, width: 40, tableLayout: "auto" });
+    expect(out).toMatch(/│ a\s+│\s+b\s+│\s+c │/);
+    expect(out).not.toContain("左:");
+  });
+
   it("wraps table cells on spaces when width is small", () => {
     const md = `
 | h1 | h2 |

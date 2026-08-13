@@ -701,7 +701,20 @@ function renderTable(node: Table, ctx: RenderContext): string[] {
   const widths: number[] = Array.from({ length: colCount }, () => 1);
   const aligns = node.align || [];
   const pad = ctx.options.tablePadding;
-  const tableIsNarrow = ctx.options.wrap && Boolean(ctx.options.width) && (ctx.options.width ?? 0) < colCount * 16;
+  const padStr = " ".repeat(Math.max(0, pad));
+
+  cells.forEach((row: string[]) => {
+    row.forEach((cell: string, idx: number) => {
+      const padded = `${padStr}${cell}${padStr}`;
+      widths[idx] = Math.max(widths[idx] ?? 1, Math.min(MAX_COL, visibleWidth(padded)));
+    });
+  });
+
+  const naturalWidth = widths.reduce((a, b) => a + b, 0) + colCount + 1;
+  const tableIsNarrow =
+    ctx.options.wrap &&
+    ctx.options.width !== undefined &&
+    naturalWidth > ctx.options.width;
   if (ctx.options.tableLayout === "vertical" || (ctx.options.tableLayout === "auto" && tableIsNarrow)) {
     const viewport = ctx.options.width ?? 80;
     const headers = cells[0] ?? [];
@@ -713,17 +726,8 @@ function renderTable(node: Table, ctx: RenderContext): string[] {
     }).concat(rowIndex < rows.length - 1 ? [ctx.style("─".repeat(viewport), ctx.options.theme.hr)] : []));
     return [`${lines.join("\n")}\n\n`];
   }
-  const padStr = " ".repeat(Math.max(0, pad));
   const minContent = Math.max(1, visibleWidth(ctx.options.tableEllipsis));
   const minColWidth = Math.max(1, pad * 2 + minContent);
-
-  cells.forEach((row: string[]) => {
-    row.forEach((cell: string, idx: number) => {
-      const padded = `${padStr}${cell}${padStr}`;
-      // Cap each column to MAX_COL but keep at least 1
-      widths[idx] = Math.max(widths[idx] ?? 1, Math.min(MAX_COL, visibleWidth(padded)));
-    });
-  });
 
   const totalWidth = widths.reduce((a, b) => a + b, 0) + colCount + 1;
   if (ctx.options.wrap && ctx.options.width && totalWidth > ctx.options.width) {
@@ -773,13 +777,8 @@ function renderTable(node: Table, ctx: RenderContext): string[] {
     return out;
   };
 
-  const headerRows = renderRow(
-    header.children.map((c) => renderInline(c.children, ctx)),
-    true,
-  );
-  const bodyRows = rows.flatMap((r) =>
-    renderRow(r.children.map((c) => renderInline(c.children, ctx))),
-  );
+  const headerRows = renderRow(cells[0] ?? [], true);
+  const bodyRows = cells.slice(1).flatMap((row) => renderRow(row));
 
   if (ctx.options.tableBorder === "none") {
     const lines = [...headerRows, ...bodyRows].map((row) => row.join(" | ")).join("\n");
