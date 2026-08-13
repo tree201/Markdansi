@@ -92,6 +92,11 @@ describe("inline formatting", () => {
     expect(out).toContain("Title");
     expect(out).toContain("—");
   });
+
+  it("collapses consecutive horizontal rules", () => {
+    const out = strip("---\n\n---\n\n---", { ...noColor, width: 20 });
+    expect(out.split("\n").filter((line) => line.includes("—")).length).toBe(1);
+  });
 });
 
 describe("wrapping", () => {
@@ -212,6 +217,13 @@ describe("lists and tasks", () => {
   it("keeps ordered lists separate around blockquotes", () => {
     const out = strip("1. first\n> quote\n2. second\n> quote", noColor);
     expect(out).toContain("1. first\n│ quote\n2. second\n│ quote");
+  });
+
+  it("keeps loose lists compact when requested", () => {
+    const markdown = "- Context 是否提升解决成功率；\n\n- 是否降低耗时；\n\n- 是否降低 token / 成本；";
+    const out = strip(markdown, { ...noColor, blockSpacing: "compact" });
+    expect(out).toContain("Context 是否提升解决成功率；\n- 是否降低耗时；\n- 是否降低 token / 成本；");
+    expect(out).not.toContain("\n\n");
   });
 });
 

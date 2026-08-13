@@ -5,6 +5,14 @@ import { render, strip } from "../src/index.ts";
 const noColor = { color: false, hyperlinks: false, wrap: true, width: 40 };
 
 describe("code blocks", () => {
+  it("limits incomplete streamed code rows when requested", () => {
+    const out = strip("```ts\nline one\nline two\nline three", { ...noColor, maxCodeRows: 2 });
+    expect(out).toContain("line one");
+    expect(out).toContain("line two");
+    expect(out).toContain("code is being written");
+    expect(out).not.toContain("line three");
+  });
+
   it("wraps code lines when codeWrap is enabled (default)", () => {
     const md = "```\n0123456789ABCDEFG\n```";
     const out = strip(md, { ...noColor, width: 12, codeBox: false });

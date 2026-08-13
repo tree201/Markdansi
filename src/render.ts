@@ -39,6 +39,8 @@ type ResolvedOptions = {
   codeBox: boolean;
   codeGutter: boolean;
   codeWrap: boolean;
+  blockSpacing: "normal" | "compact";
+  maxCodeRows?: number | undefined;
 };
 
 type RenderContext = {
@@ -90,6 +92,8 @@ function resolveOptions(userOptions: RenderOptions = {}): ResolvedOptions {
   const codeBox = userOptions.codeBox ?? true;
   const codeGutter = userOptions.codeGutter ?? false;
   const codeWrap = userOptions.codeWrap ?? true;
+  const blockSpacing = userOptions.blockSpacing ?? "normal";
+  const maxCodeRows = userOptions.maxCodeRows;
   const resolved: ResolvedOptions = {
     wrap,
     color,
@@ -107,6 +111,8 @@ function resolveOptions(userOptions: RenderOptions = {}): ResolvedOptions {
     codeBox,
     codeGutter,
     codeWrap,
+    blockSpacing,
+    ...(maxCodeRows !== undefined ? { maxCodeRows } : {}),
   };
   if (baseWidth !== undefined) resolved.width = baseWidth;
   return resolved;
@@ -172,7 +178,10 @@ function normalizeNodes(tree: Root): Root {
       }
     }
 
-    if (node) normalized.push(node);
+    if (node) {
+      if (node.type === "thematicBreak" && normalized.at(-1)?.type === "thematicBreak") continue;
+      normalized.push(node);
+    }
   }
 
   const mergedCodes = mergeAdjacentCodeBlocks(normalized);
@@ -447,7 +456,7 @@ function renderBlockquote(node: Blockquote, ctx: RenderContext, indentLevel: num
 }
 
 function renderList(node: List, ctx: RenderContext, indentLevel: number): string[] {
-  const tight = node.spread === false;
+  const tight = ctx.options.blockSpacing === "compact" || node.spread === false;
   const items = node.children.flatMap((item: ListItem, idx: number) =>
     renderListItem(item, ctx, indentLevel, tight, Boolean(node.ordered), node.start ?? 1, idx),
   );
@@ -508,7 +517,9 @@ function renderDefinition(
 
 function renderCodeBlock(node: Code, ctx: RenderContext): string[] {
   const theme = ctx.options.theme.blockCode || ctx.options.theme.inlineCode;
-  const lines = (node.value ?? "").split("\n");
+  const sourceLines = (node.value ?? "").split("\n");
+  const truncated = ctx.options.maxCodeRows !== undefined && sourceLines.length > ctx.options.maxCodeRows;
+  const lines = truncated ? sourceLines.slice(0, ctx.options.maxCodeRows) : sourceLines;
   const isDiff = node.lang === "diff";
   const gutterWidth = ctx.options.codeGutter ? String(lines.length).length + 2 : 0;
   const shouldWrap = isDiff ? false : ctx.options.codeWrap;
@@ -531,7 +542,7 @@ function renderCodeBlock(node: Code, ctx: RenderContext): string[] {
   });
 
   if (!useBox) {
-    return [`${contentLines.join("\n")}\n\n`];
+    return [`${contentLines.join("\n")}${truncated ? "\n… code is being written …" : ""}\n\n`];
   }
 
   // Boxed block
@@ -563,6 +574,7 @@ function renderCodeBlock(node: Code, ctx: RenderContext): string[] {
     const right = ctx.style(" │", { dim: true });
     return `${left}${ln}${" ".repeat(pad)}${right}`;
   });
+  if (truncated) boxLines.push(ctx.style("… code is being written …", { dim: true }));
 
   return [`${top}\n${boxLines.join("\n")}\n${bottom}\n\n`];
 }

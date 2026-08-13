@@ -55,6 +55,10 @@ export interface RenderOptions {
   hyperlinks?: boolean;
   color?: boolean;
   theme?: ThemeName | Theme;
+  /** Controls visual spacing between Markdown blocks (default "normal"). */
+  blockSpacing?: "normal" | "compact";
+  /** Limits rendered code rows when a caller is displaying incomplete streamed Markdown. */
+  maxCodeRows?: number;
   /**
    * Spaces per nesting level for lists (default 2).
    */
