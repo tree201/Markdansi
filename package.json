@@ -1,6 +1,6 @@
 {
-  "name": "markdansi",
-  "version": "0.3.3",
+  "name": "@tree201/markdansi",
+  "version": "0.4.0",
   "description": "Tiny dependency-light markdown to ANSI converter.",
   "keywords": [
     "ansi",
@@ -8,15 +8,15 @@
     "markdown",
     "terminal"
   ],
-  "homepage": "https://github.com/steipete/Markdansi#readme",
+  "homepage": "https://github.com/tree201/Markdansi#readme",
   "bugs": {
-    "url": "https://github.com/steipete/Markdansi/issues"
+    "url": "https://github.com/tree201/Markdansi/issues"
   },
   "license": "MIT",
-  "author": "Peter Steinberger",
+  "author": "tree201",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/steipete/Markdansi.git"
+    "url": "git+https://github.com/tree201/Markdansi.git"
   },
   "bin": {
     "markdansi": "dist/cli.js"
@@ -73,5 +73,8 @@
   },
   "engines": {
     "node": ">=20.19.0"
+  },
+  "publishConfig": {
+    "access": "public"
   }
 }
