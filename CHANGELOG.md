@@ -1,6 +1,11 @@
 # Changelog
 
-## 0.3.4 - Unreleased
+## Unreleased
+
+## 0.4.2 (2026-08-14)
+
+- Math: parse inline `$...$` and display `$$...$$` as semantic nodes and render common LaTeX notation with terminal-safe Unicode.
+- Themes: add a dedicated `math` style while preserving literal code spans, fenced code, and dollar amounts.
 
 ## 0.3.3 (2026-08-02)
 
