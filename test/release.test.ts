@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import {
   bumpVersion,
+  porcelainPaths,
   releaseChangelog,
   releaseInput,
   resolveVersion,
@@ -17,6 +18,13 @@ describe("release helpers", () => {
   it("accepts pnpm and direct release arguments", () => {
     expect(releaseInput(["node", "release.mjs", "--", "patch"])).toBe("patch");
     expect(releaseInput(["node", "release.mjs", "minor"])).toBe("minor");
+  });
+
+  it("extracts paths from git porcelain status entries", () => {
+    expect(porcelainPaths(" M CHANGELOG.md\n?? scripts/release.mjs\n")).toEqual([
+      "CHANGELOG.md",
+      "scripts/release.mjs",
+    ]);
   });
 
   it("allows release formatting to update only generated release files", () => {

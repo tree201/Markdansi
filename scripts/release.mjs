@@ -42,6 +42,17 @@ export function unexpectedReleasePaths(paths) {
   );
 }
 
+export function porcelainPaths(status) {
+  return status
+    .split("\n")
+    .filter(Boolean)
+    .map((line) => {
+      const match = /^.{2}\s(.+)$/.exec(line);
+      if (!match) throw new Error(`invalid git porcelain entry: ${line}`);
+      return match[1];
+    });
+}
+
 function run(command, args, options = {}) {
   return execFileSync(command, args, {
     cwd: projectRoot,
@@ -89,11 +100,7 @@ async function main(argv) {
 
   try {
     run("pnpm", ["format"], { inherit: true });
-    const changed = git("status", "--porcelain")
-      .split("\n")
-      .filter(Boolean)
-      .map((line) => line.slice(3));
-    const unexpected = unexpectedReleasePaths(changed);
+    const unexpected = unexpectedReleasePaths(porcelainPaths(git("status", "--porcelain")));
     if (unexpected.length)
       throw new Error(`release formatting changed unexpected files: ${unexpected.join(", ")}`);
     run("pnpm", ["build"], { inherit: true });
