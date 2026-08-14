@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+## 0.4.3 (2026-08-14)
+
 - Release: run the same complete `pnpm build` quality gate in CI, publishing, and the local release command.
 - Release: add `pnpm release -- <version | major | minor | patch>` for verified versioning, tagging, and pushing.
 - Formatting: normalize files that previously caused CI to fail after a successful npm publish.
