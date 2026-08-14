@@ -65,6 +65,10 @@ function git(...args) {
   return run("git", args).trim();
 }
 
+function gitStatus() {
+  return run("git", ["status", "--porcelain"]);
+}
+
 function restoreAfterFailure(packageSource, changelogSource) {
   return Promise.all([
     writeFile(packageFile, packageSource),
@@ -81,7 +85,7 @@ export function releaseInput(argv) {
 async function main(argv) {
   const input = releaseInput(argv);
   if (!input) throw new Error("usage: pnpm release -- <version | major | minor | patch>");
-  if (git("status", "--porcelain")) throw new Error("working tree must be clean before releasing");
+  if (gitStatus()) throw new Error("working tree must be clean before releasing");
   if (git("branch", "--show-current") !== "main") throw new Error("releases must run from main");
 
   const packageSource = await readFile(packageFile, "utf8");
@@ -100,7 +104,7 @@ async function main(argv) {
 
   try {
     run("pnpm", ["format"], { inherit: true });
-    const unexpected = unexpectedReleasePaths(porcelainPaths(git("status", "--porcelain")));
+    const unexpected = unexpectedReleasePaths(porcelainPaths(gitStatus()));
     if (unexpected.length)
       throw new Error(`release formatting changed unexpected files: ${unexpected.join(", ")}`);
     run("pnpm", ["build"], { inherit: true });
