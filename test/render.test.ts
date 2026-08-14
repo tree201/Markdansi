@@ -50,15 +50,24 @@ describe("inline formatting", () => {
     expect(out).not.toContain("\\mathrm");
   });
 
-  it("renders display LaTeX math as an indented block", () => {
-    const out = strip(
-      "Before\n\n$$\n\\partial\\Gamma\\coloneqq\\Gamma\\times(\\Gamma\\to\\Gamma)\\tag{5}\n$$\n\nAfter",
-      noColor,
-    );
+  it("renders display LaTeX math as an indented two-dimensional Unicode grid", () => {
+    const out = strip("Before\n\n$$\n\\frac{a}{b}\n$$\n\nAfter", noColor);
     expect(out).toContain("Before");
-    expect(out).toContain("  ∂Γ≔Γ×(Γ→Γ)    (5)");
+    expect(out).toContain("   a\n  ───\n   b");
     expect(out).toContain("After");
     expect(out).not.toContain("$$");
+  });
+
+  it("renders display matrices as a two-dimensional Unicode grid", () => {
+    const out = strip("$$\\begin{bmatrix}a&b\\\\c&d\\end{bmatrix}$$", noColor);
+    expect(out).toContain("  ⎡ a    b ⎤");
+    expect(out).toContain("  ⎢");
+    expect(out).toContain("  ⎣ c    d ⎦");
+  });
+
+  it("falls back to inline Unicode conversion for unsupported display LaTeX", () => {
+    const out = strip("$$\\unknown{x}$$", noColor);
+    expect(out).toContain("  unknownx");
   });
 
   it("leaves code spans, fenced code, and dollar amounts unchanged", () => {

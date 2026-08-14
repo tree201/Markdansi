@@ -4,6 +4,7 @@ import stripAnsi from "strip-ansi";
 import { hyperlinkSupported, osc8 } from "./hyperlink.js";
 import { parse } from "./parser.js";
 import { convertLatexToUnicode } from "./latex.js";
+import { renderDisplayLatex } from "./txm.js";
 import { createStyler, themes } from "./theme.js";
 import { visibleWidth, wrapText, wrapWithPrefix } from "./wrap.js";
 function dedent(markdown) {
@@ -461,8 +462,8 @@ function renderCodeBlock(node, ctx) {
     return [`${top}\n${boxLines.join("\n")}\n${bottom}\n\n`];
 }
 function renderDisplayMath(node, ctx) {
-    const converted = convertLatexToUnicode(node.value);
-    const styled = ctx.style(converted, ctx.options.theme.math || ctx.options.theme.inlineCode);
+    const rendered = renderDisplayLatex(node.value);
+    const styled = ctx.style(rendered, ctx.options.theme.math || ctx.options.theme.inlineCode);
     const lines = styled.split("\n");
     return [`\n${lines.map((l) => `  ${l}`).join("\n")}\n`];
 }
