@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 import {
   bumpVersion,
   releaseChangelog,
+  releaseInput,
   resolveVersion,
   unexpectedReleasePaths,
 } from "../scripts/release.mjs";
@@ -11,6 +12,11 @@ describe("release helpers", () => {
     expect(bumpVersion("1.2.3", "patch")).toBe("1.2.4");
     expect(bumpVersion("1.2.3", "minor")).toBe("1.3.0");
     expect(bumpVersion("1.2.3", "major")).toBe("2.0.0");
+  });
+
+  it("accepts pnpm and direct release arguments", () => {
+    expect(releaseInput(["node", "release.mjs", "--", "patch"])).toBe("patch");
+    expect(releaseInput(["node", "release.mjs", "minor"])).toBe("minor");
   });
 
   it("allows release formatting to update only generated release files", () => {

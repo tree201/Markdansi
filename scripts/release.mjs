@@ -63,8 +63,12 @@ function restoreAfterFailure(packageSource, changelogSource) {
   });
 }
 
+export function releaseInput(argv) {
+  return argv[2] === "--" ? argv[3] : argv[2];
+}
+
 async function main(argv) {
-  const input = argv[2];
+  const input = releaseInput(argv);
   if (!input) throw new Error("usage: pnpm release -- <version | major | minor | patch>");
   if (git("status", "--porcelain")) throw new Error("working tree must be clean before releasing");
   if (git("branch", "--show-current") !== "main") throw new Error("releases must run from main");
