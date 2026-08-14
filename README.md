@@ -39,6 +39,16 @@ Hello, terminal
 
 Omit `--no-color` for ANSI styles and OSC-8 links when the terminal supports them.
 
+## Releasing the fork
+
+Run releases only from a clean `main` branch:
+
+```sh
+pnpm release -- patch
+```
+
+The release command updates `package.json` and `CHANGELOG.md`, runs the complete `pnpm build` quality gate, commits `release: vX.Y.Z`, creates the tag, and pushes `main` plus the tag. The tag triggers npm OIDC publishing. Explicit versions and `major` / `minor` are also supported.
+
 ## Use as a library
 
 ```js

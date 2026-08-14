@@ -4,7 +4,6 @@ import type {
   BlockNode,
   Code,
   DisplayMath,
-  InlineMath,
   InlineNode,
   ListItem,
   Root,

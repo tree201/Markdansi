@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+- Release: run the same complete `pnpm build` quality gate in CI, publishing, and the local release command.
+- Release: add `pnpm release -- <version | major | minor | patch>` for verified versioning, tagging, and pushing.
+- Formatting: normalize files that previously caused CI to fail after a successful npm publish.
+
 ## 0.4.2 (2026-08-14)
 
 - Math: parse inline `$...$` and display `$$...$$` as semantic nodes and render common LaTeX notation with terminal-safe Unicode.
