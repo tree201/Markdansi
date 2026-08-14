@@ -1,0 +1,12 @@
+[package]
+name = "txm-wasm"
+version = "0.1.0"
+edition = "2024"
+publish = false
+
+[lib]
+crate-type = ["cdylib"]
+
+[dependencies]
+txm = { path = "../txm" }
+wasm-bindgen = "=0.2.117"

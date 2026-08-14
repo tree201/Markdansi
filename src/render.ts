@@ -16,6 +16,7 @@ import { hyperlinkSupported, osc8 } from "./hyperlink.js";
 import { parse } from "./parser.js";
 import { convertLatexToUnicode } from "./latex.js";
 import type { Styler } from "./theme.js";
+import { renderDisplayLatex } from "./txm.js";
 import { createStyler, themes } from "./theme.js";
 import type { RenderOptions, StyleIntent, Theme } from "./types.js";
 import { visibleWidth, wrapText, wrapWithPrefix } from "./wrap.js";
@@ -590,8 +591,8 @@ function renderCodeBlock(node: Code, ctx: RenderContext): string[] {
 }
 
 function renderDisplayMath(node: { value: string }, ctx: RenderContext): string[] {
-  const converted = convertLatexToUnicode(node.value);
-  const styled = ctx.style(converted, ctx.options.theme.math || ctx.options.theme.inlineCode);
+  const rendered = renderDisplayLatex(node.value);
+  const styled = ctx.style(rendered, ctx.options.theme.math || ctx.options.theme.inlineCode);
   const lines = styled.split("\n");
   return [`\n${lines.map((l) => `  ${l}`).join("\n")}\n`];
 }
