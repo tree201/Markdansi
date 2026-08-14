@@ -34,13 +34,21 @@ jobs:
           VERSION=$(node -p "require('./package.json').version")
           test "$GITHUB_REF_NAME" = "v$VERSION"
       - name: Publish to npm with provenance
-        run: npm publish --access public
+        run: |
+          VERSION=$(node -p "require('./package.json').version")
+          if npm view "@tree201/markdansi@$VERSION" version >/dev/null 2>&1; then
+            echo "@tree201/markdansi@$VERSION is already published"
+          else
+            npm publish --access public
+          fi
       - name: Create GitHub release
         if: github.event_name == 'push'
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
-          if [[ "$GITHUB_REF_NAME" == *-* ]]; then
+          if gh release view "$GITHUB_REF_NAME" >/dev/null 2>&1; then
+            echo "GitHub release $GITHUB_REF_NAME already exists"
+          elif [[ "$GITHUB_REF_NAME" == *-* ]]; then
             gh release create "$GITHUB_REF_NAME" --generate-notes --prerelease
           else
             gh release create "$GITHUB_REF_NAME" --generate-notes
