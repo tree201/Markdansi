@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- Math: render display LaTeX with the TXM WASM backend as two-dimensional terminal Unicode, including fractions and matrices, while retaining inline compatibility fallbacks.
+
 ## 0.4.3 (2026-08-14)
 
 - Release: run the same complete `pnpm build` quality gate in CI, publishing, and the local release command.
