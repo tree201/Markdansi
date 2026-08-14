@@ -14,6 +14,7 @@ const base: Theme = {
   listMarker: { color: "cyan" },
   tableHeader: { bold: true, color: "yellow" },
   tableCell: {},
+  math: { color: "green" },
 };
 
 const dim: Theme = {

@@ -40,7 +40,11 @@ export type Image = Node & {
     type: "image";
     alt: string;
 };
-export type InlineNode = Text | Emphasis | Strong | Delete | InlineCode | Link | Break | Html | Image;
+export type InlineMath = Node & {
+    type: "inlineMath";
+    value: string;
+};
+export type InlineNode = Text | Emphasis | Strong | Delete | InlineCode | Link | Break | Html | Image | InlineMath;
 export type Paragraph = Node & {
     type: "paragraph";
     children: InlineNode[];
@@ -95,7 +99,11 @@ export type Definition = Node & {
     url?: string | undefined;
     title?: string | null | undefined;
 };
-export type BlockNode = Paragraph | Heading | ThematicBreak | Blockquote | List | ListItem | Code | Table | Definition;
+export type DisplayMath = Node & {
+    type: "displayMath";
+    value: string;
+};
+export type BlockNode = Paragraph | Heading | ThematicBreak | Blockquote | List | ListItem | Code | Table | Definition | DisplayMath;
 export type Root = Node & {
     type: "root";
     children: BlockNode[];

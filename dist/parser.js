@@ -1,5 +1,5 @@
 import { decodeNamedCharacterReference } from "decode-named-character-reference";
-import { marked } from "marked";
+import { Marked } from "marked";
 const CHARACTER_REFERENCE = /&(#\d+|#x[\da-f]+|[a-z][\da-z]+);/giu;
 function decodeNumericReference(body, radix) {
     const offset = radix === 16 ? 2 : 1;
@@ -91,6 +91,9 @@ function convertInlineTokens(tokens) {
             case "html":
                 nodes.push({ type: "html", value: token.text });
                 break;
+            case "inlineMath":
+                nodes.push({ type: "inlineMath", value: token.text });
+                break;
             default:
                 break;
         }
@@ -131,6 +134,11 @@ function convertTableRow(cells) {
 }
 function convertBlockToken(token) {
     switch (token.type) {
+        case "displayMath":
+            return {
+                type: "displayMath",
+                value: token.text,
+            };
         case "paragraph":
             return {
                 type: "paragraph",
@@ -200,9 +208,44 @@ function convertBlockTokens(tokens) {
         return node ? [node] : [];
     });
 }
+const mathExtensions = [
+    {
+        name: "displayMath",
+        level: "block",
+        tokenizer(src) {
+            const match = /^\$\$([\s\S]+?)\$\$(?:\n|$)/.exec(src);
+            if (match?.[1] !== undefined) {
+                return { type: "displayMath", raw: match[0], text: match[1].trim() };
+            }
+            return undefined;
+        },
+        renderer() {
+            return "";
+        },
+    },
+    {
+        name: "inlineMath",
+        level: "inline",
+        start(src) {
+            return src.indexOf("$");
+        },
+        tokenizer(src) {
+            const match = /^\$(?!\$|\d)([^$\n]+?)\$/.exec(src);
+            if (match?.[1] !== undefined) {
+                return { type: "inlineMath", raw: match[0], text: match[1].trim() };
+            }
+            return undefined;
+        },
+        renderer() {
+            return "";
+        },
+    },
+];
+const markedInstance = new Marked({ gfm: true });
+markedInstance.use({ extensions: mathExtensions });
 export function parse(markdown) {
     return {
         type: "root",
-        children: convertBlockTokens(marked.lexer(markdown, { gfm: true })),
+        children: convertBlockTokens(markedInstance.lexer(markdown)),
     };
 }

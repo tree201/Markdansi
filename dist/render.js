@@ -3,6 +3,7 @@ import stringWidth from "string-width";
 import stripAnsi from "strip-ansi";
 import { hyperlinkSupported, osc8 } from "./hyperlink.js";
 import { parse } from "./parser.js";
+import { convertLatexToUnicode } from "./latex.js";
 import { createStyler, themes } from "./theme.js";
 import { visibleWidth, wrapText, wrapWithPrefix } from "./wrap.js";
 function dedent(markdown) {
@@ -318,6 +319,8 @@ function renderNode(node, ctx, indentLevel, isTightList) {
             return renderTable(node, ctx);
         case "definition":
             return renderDefinition(node, ctx);
+        case "displayMath":
+            return renderDisplayMath(node, ctx);
         default:
             return []; // inline handled elsewhere or intentionally skipped
     }
@@ -457,6 +460,12 @@ function renderCodeBlock(node, ctx) {
         boxLines.push(ctx.style("… code is being written …", { dim: true }));
     return [`${top}\n${boxLines.join("\n")}\n${bottom}\n\n`];
 }
+function renderDisplayMath(node, ctx) {
+    const converted = convertLatexToUnicode(node.value);
+    const styled = ctx.style(converted, ctx.options.theme.math || ctx.options.theme.inlineCode);
+    const lines = styled.split("\n");
+    return [`\n${lines.map((l) => `  ${l}`).join("\n")}\n`];
+}
 function renderInline(children, ctx) {
     let out = "";
     for (const node of children) {
@@ -491,6 +500,11 @@ function renderInline(children, ctx) {
             case "image":
                 out += ctx.style(`[Image: ${node.alt}]`, ctx.options.theme.link);
                 break;
+            case "inlineMath": {
+                const converted = convertLatexToUnicode(node.value);
+                out += ctx.style(converted, ctx.options.theme.math || ctx.options.theme.inlineCode);
+                break;
+            }
         }
     }
     return out;
@@ -553,7 +567,10 @@ function renderTable(node, ctx) {
     if (!header)
         return [];
     const rows = node.children.slice(1);
-    const tableContext = { ...ctx, options: { ...ctx.options, inlineCodeMarkers: false } };
+    const tableContext = {
+        ...ctx,
+        options: { ...ctx.options, inlineCodeMarkers: false },
+    };
     const cells = [header, ...rows].map((row) => row.children.map((cell) => renderInline(cell.children, tableContext)));
     const colCount = Math.max(...cells.map((r) => r.length));
     const widths = Array.from({ length: colCount }, () => 1);
@@ -570,18 +587,22 @@ function renderTable(node, ctx) {
         });
     });
     const naturalWidth = widths.reduce((a, b) => a + b, 0) + colCount + 1;
-    const tableIsNarrow = ctx.options.wrap &&
-        ctx.options.width !== undefined &&
-        naturalWidth > ctx.options.width;
-    if (ctx.options.tableLayout === "vertical" || (ctx.options.tableLayout === "auto" && tableIsNarrow)) {
+    const tableIsNarrow = ctx.options.wrap && ctx.options.width !== undefined && naturalWidth > ctx.options.width;
+    if (ctx.options.tableLayout === "vertical" ||
+        (ctx.options.tableLayout === "auto" && tableIsNarrow)) {
         const viewport = ctx.options.width ?? 80;
         const headers = cells[0] ?? [];
-        const lines = rows.flatMap((row, rowIndex) => row.children.flatMap((cell, column) => {
+        const lines = rows.flatMap((row, rowIndex) => row.children
+            .flatMap((cell, column) => {
             const label = headers[column] ?? "";
             const value = renderInline(cell.children, tableContext);
             const wrapped = wrapText(value, Math.max(1, viewport - 2), ctx.options.wrap);
-            return [ctx.style(`${label}:`, ctx.options.theme.tableHeader), ...wrapped.map((line) => `  ${ctx.style(line, ctx.options.theme.tableCell)}`)];
-        }).concat(rowIndex < rows.length - 1 ? [ctx.style("─".repeat(viewport), ctx.options.theme.hr)] : []));
+            return [
+                ctx.style(`${label}:`, ctx.options.theme.tableHeader),
+                ...wrapped.map((line) => `  ${ctx.style(line, ctx.options.theme.tableCell)}`),
+            ];
+        })
+            .concat(rowIndex < rows.length - 1 ? [ctx.style("─".repeat(viewport), ctx.options.theme.hr)] : []));
         return [`${lines.join("\n")}\n\n`];
     }
     if (ctx.options.wrap && ctx.options.width && naturalWidth < ctx.options.width) {

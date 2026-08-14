@@ -21,6 +21,7 @@ export type Theme = {
     listMarker?: StyleIntent;
     tableHeader?: StyleIntent;
     tableCell?: StyleIntent;
+    math?: StyleIntent;
 };
 export declare const themeNames: readonly ["default", "dim", "bright", "solarized", "monochrome", "contrast"];
 export type ThemeName = (typeof themeNames)[number];

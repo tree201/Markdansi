@@ -88,9 +88,16 @@ Each theme entry holds simple SGR intents (bold/italic plus named, `#rrggbb`, or
 - Unit: inline formatting (emph/strong/code/strike), links/hyperlinks on/off, wrap/no-wrap behavior, table alignment and wrapping, task lists, strikethrough.
 - Snapshot-ish string comparisons for representative documents (with colors off to avoid brittle codes).
 
+## Math
+
+- Inline `$...$` and display `$$...$$` LaTeX are parsed as semantic math nodes.
+- Common Greek letters, operators, arrows, relations, blackboard-bold sets, subscripts, superscripts, fractions, roots, and equation tags are rendered with terminal-safe Unicode.
+- Math content uses the dedicated `theme.math` style. Code spans, fenced code, and dollar amounts remain literal.
+- The terminal renderer provides a readable one-line approximation; it does not attempt full TeX layout such as stacked fractions or matrices.
+
 ## Non-Goals (v1)
 
-- Images, footnotes, math, HTML passthrough, syntax highlighting bundle.
+- Images, footnotes, HTML passthrough, syntax highlighting bundle, full TeX typesetting.
 
 ## Notes
 

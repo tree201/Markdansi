@@ -40,6 +40,42 @@ describe("inline formatting", () => {
     expect(ansi).toContain("\u001b[32mblock"); // green
   });
 
+  it("renders inline LaTeX math as terminal Unicode", () => {
+    const out = strip(
+      "Given $f_{\\mathrm{impure}}:X\\to Y$ and $\\Gamma\\times X\\to\\Gamma\\times Y$.",
+      noColor,
+    );
+    expect(out).toContain("Given fᵢₘₚᵤᵣₑ:X→ Y and Γ× X→Γ× Y.");
+    expect(out).not.toContain("$");
+    expect(out).not.toContain("\\mathrm");
+  });
+
+  it("renders display LaTeX math as an indented block", () => {
+    const out = strip(
+      "Before\n\n$$\n\\partial\\Gamma\\coloneqq\\Gamma\\times(\\Gamma\\to\\Gamma)\\tag{5}\n$$\n\nAfter",
+      noColor,
+    );
+    expect(out).toContain("Before");
+    expect(out).toContain("  ∂Γ≔Γ×(Γ→Γ)    (5)");
+    expect(out).toContain("After");
+    expect(out).not.toContain("$$");
+  });
+
+  it("leaves code spans, fenced code, and dollar amounts unchanged", () => {
+    const out = strip("Use `$PATH` and pay $100.\n\n```ts\nconst formula = '$x$'\n```", noColor);
+    expect(out).toContain("Use $PATH and pay $100.");
+    expect(out).toContain("const formula = '$x$'");
+  });
+
+  it("applies a dedicated math theme", () => {
+    const ansi = render("$x_1^2$", {
+      color: true,
+      theme: { ...themes.default, math: { color: "magenta" } },
+      wrap: false,
+    });
+    expect(ansi).toContain("\u001b[35mx₁²");
+  });
+
   it("applies highlighter hook to code blocks", () => {
     const out = render("```\ncode\n```", {
       color: true,
@@ -99,7 +135,11 @@ describe("inline formatting", () => {
   });
 
   it("renders image placeholders and configured unordered list markers", () => {
-    const out = strip("- item\n\n![Layout](./layout.png)", { ...noColor, blockSpacing: "compact", unorderedListMarker: "•" });
+    const out = strip("- item\n\n![Layout](./layout.png)", {
+      ...noColor,
+      blockSpacing: "compact",
+      unorderedListMarker: "•",
+    });
     expect(out).toContain("• item");
     expect(out).toContain("[Image: Layout]");
   });
@@ -226,9 +266,12 @@ describe("lists and tasks", () => {
   });
 
   it("keeps loose lists compact when requested", () => {
-    const markdown = "- Context 是否提升解决成功率；\n\n- 是否降低耗时；\n\n- 是否降低 token / 成本；";
+    const markdown =
+      "- Context 是否提升解决成功率；\n\n- 是否降低耗时；\n\n- 是否降低 token / 成本；";
     const out = strip(markdown, { ...noColor, blockSpacing: "compact" });
-    expect(out).toContain("Context 是否提升解决成功率；\n- 是否降低耗时；\n- 是否降低 token / 成本；");
+    expect(out).toContain(
+      "Context 是否提升解决成功率；\n- 是否降低耗时；\n- 是否降低 token / 成本；",
+    );
     expect(out).not.toContain("\n\n");
   });
 });

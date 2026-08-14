@@ -34,6 +34,7 @@ export type Theme = {
   listMarker?: StyleIntent;
   tableHeader?: StyleIntent;
   tableCell?: StyleIntent;
+  math?: StyleIntent;
 };
 
 export const themeNames = [

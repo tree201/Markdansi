@@ -14,6 +14,7 @@ import stringWidth from "string-width";
 import stripAnsi from "strip-ansi";
 import { hyperlinkSupported, osc8 } from "./hyperlink.js";
 import { parse } from "./parser.js";
+import { convertLatexToUnicode } from "./latex.js";
 import type { Styler } from "./theme.js";
 import { createStyler, themes } from "./theme.js";
 import type { RenderOptions, StyleIntent, Theme } from "./types.js";
@@ -405,6 +406,8 @@ function renderNode(
       return renderTable(node, ctx);
     case "definition":
       return renderDefinition(node, ctx);
+    case "displayMath":
+      return renderDisplayMath(node, ctx);
     default:
       return []; // inline handled elsewhere or intentionally skipped
   }
@@ -524,7 +527,8 @@ function renderDefinition(
 function renderCodeBlock(node: Code, ctx: RenderContext): string[] {
   const theme = ctx.options.theme.blockCode || ctx.options.theme.inlineCode;
   const sourceLines = (node.value ?? "").split("\n");
-  const truncated = ctx.options.maxCodeRows !== undefined && sourceLines.length > ctx.options.maxCodeRows;
+  const truncated =
+    ctx.options.maxCodeRows !== undefined && sourceLines.length > ctx.options.maxCodeRows;
   const lines = truncated ? sourceLines.slice(0, ctx.options.maxCodeRows) : sourceLines;
   const isDiff = node.lang === "diff";
   const gutterWidth = ctx.options.codeGutter ? String(lines.length).length + 2 : 0;
@@ -585,6 +589,13 @@ function renderCodeBlock(node: Code, ctx: RenderContext): string[] {
   return [`${top}\n${boxLines.join("\n")}\n${bottom}\n\n`];
 }
 
+function renderDisplayMath(node: { value: string }, ctx: RenderContext): string[] {
+  const converted = convertLatexToUnicode(node.value);
+  const styled = ctx.style(converted, ctx.options.theme.math || ctx.options.theme.inlineCode);
+  const lines = styled.split("\n");
+  return [`\n${lines.map((l) => `  ${l}`).join("\n")}\n`];
+}
+
 function renderInline(children: Paragraph["children"], ctx: RenderContext): string {
   let out = "";
   for (const node of children) {
@@ -619,6 +630,11 @@ function renderInline(children: Paragraph["children"], ctx: RenderContext): stri
       case "image":
         out += ctx.style(`[Image: ${node.alt}]`, ctx.options.theme.link);
         break;
+      case "inlineMath": {
+        const converted = convertLatexToUnicode(node.value);
+        out += ctx.style(converted, ctx.options.theme.math || ctx.options.theme.inlineCode);
+        break;
+      }
     }
   }
   return out;
@@ -693,7 +709,10 @@ function renderTable(node: Table, ctx: RenderContext): string[] {
   const header = node.children[0];
   if (!header) return [];
   const rows = node.children.slice(1);
-  const tableContext: RenderContext = { ...ctx, options: { ...ctx.options, inlineCodeMarkers: false } };
+  const tableContext: RenderContext = {
+    ...ctx,
+    options: { ...ctx.options, inlineCodeMarkers: false },
+  };
   const cells = [header, ...rows].map((row) =>
     row.children.map((cell) => renderInline(cell.children, tableContext)),
   );
@@ -715,18 +734,28 @@ function renderTable(node: Table, ctx: RenderContext): string[] {
 
   const naturalWidth = widths.reduce((a, b) => a + b, 0) + colCount + 1;
   const tableIsNarrow =
-    ctx.options.wrap &&
-    ctx.options.width !== undefined &&
-    naturalWidth > ctx.options.width;
-  if (ctx.options.tableLayout === "vertical" || (ctx.options.tableLayout === "auto" && tableIsNarrow)) {
+    ctx.options.wrap && ctx.options.width !== undefined && naturalWidth > ctx.options.width;
+  if (
+    ctx.options.tableLayout === "vertical" ||
+    (ctx.options.tableLayout === "auto" && tableIsNarrow)
+  ) {
     const viewport = ctx.options.width ?? 80;
     const headers = cells[0] ?? [];
-    const lines = rows.flatMap((row, rowIndex) => row.children.flatMap((cell, column) => {
-      const label = headers[column] ?? "";
-      const value = renderInline(cell.children, tableContext);
-      const wrapped = wrapText(value, Math.max(1, viewport - 2), ctx.options.wrap);
-      return [ctx.style(`${label}:`, ctx.options.theme.tableHeader), ...wrapped.map((line) => `  ${ctx.style(line, ctx.options.theme.tableCell)}`)];
-    }).concat(rowIndex < rows.length - 1 ? [ctx.style("─".repeat(viewport), ctx.options.theme.hr)] : []));
+    const lines = rows.flatMap((row, rowIndex) =>
+      row.children
+        .flatMap((cell, column) => {
+          const label = headers[column] ?? "";
+          const value = renderInline(cell.children, tableContext);
+          const wrapped = wrapText(value, Math.max(1, viewport - 2), ctx.options.wrap);
+          return [
+            ctx.style(`${label}:`, ctx.options.theme.tableHeader),
+            ...wrapped.map((line) => `  ${ctx.style(line, ctx.options.theme.tableCell)}`),
+          ];
+        })
+        .concat(
+          rowIndex < rows.length - 1 ? [ctx.style("─".repeat(viewport), ctx.options.theme.hr)] : [],
+        ),
+    );
     return [`${lines.join("\n")}\n\n`];
   }
   if (ctx.options.wrap && ctx.options.width && naturalWidth < ctx.options.width) {

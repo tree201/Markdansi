@@ -51,7 +51,22 @@ export type Image = Node & {
   alt: string;
 };
 
-export type InlineNode = Text | Emphasis | Strong | Delete | InlineCode | Link | Break | Html | Image;
+export type InlineMath = Node & {
+  type: "inlineMath";
+  value: string;
+};
+
+export type InlineNode =
+  | Text
+  | Emphasis
+  | Strong
+  | Delete
+  | InlineCode
+  | Link
+  | Break
+  | Html
+  | Image
+  | InlineMath;
 
 export type Paragraph = Node & {
   type: "paragraph";
@@ -118,6 +133,11 @@ export type Definition = Node & {
   title?: string | null | undefined;
 };
 
+export type DisplayMath = Node & {
+  type: "displayMath";
+  value: string;
+};
+
 export type BlockNode =
   | Paragraph
   | Heading
@@ -127,7 +147,8 @@ export type BlockNode =
   | ListItem
   | Code
   | Table
-  | Definition;
+  | Definition
+  | DisplayMath;
 
 export type Root = Node & {
   type: "root";

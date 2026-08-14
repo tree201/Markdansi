@@ -11,6 +11,7 @@ const base = {
     listMarker: { color: "cyan" },
     tableHeader: { bold: true, color: "yellow" },
     tableCell: {},
+    math: { color: "green" },
 };
 const dim = {
     ...base,
