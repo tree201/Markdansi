@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+## 0.4.4 (2026-08-15)
+
 - Math: render display LaTeX with the TXM WASM backend as two-dimensional terminal Unicode, including fractions and matrices, while retaining inline compatibility fallbacks.
 
 ## 0.4.3 (2026-08-14)
